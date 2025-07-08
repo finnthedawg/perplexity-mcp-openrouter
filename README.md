@@ -1,160 +1,157 @@
-# Perplexity Ask MCP Server
+# OpenRouter Perplexity MCP Server
 
-An MCP server implementation that integrates the Sonar API to provide Claude with unparalleled real-time, web-wide research.
+Access Perplexity's powerful search models directly in Claude Code and Cursor through OpenRouter's unified API gateway. This MCP server brings real-time web search, deep research, and advanced reasoning capabilities to your AI coding assistant.
 
-Please refer to the official [DeepWiki page](https://deepwiki.com/ppl-ai/modelcontextprotocol) for assistance with implementation. 
+## 🚀 Why OpenRouter?
 
-# High-level System Architecture
+- **Unified Billing**: One API key, one invoice for all your AI models
+- **No Waitlists**: Instant access to Perplexity's latest models including Sonar Pro, Deep Research, and Reasoning
+- **Simple Integration**: OpenAI-compatible API means seamless integration
+- **Usage Tracking**: Monitor costs and usage across all models in one dashboard
+- **High Availability**: OpenRouter's infrastructure ensures reliable access
 
-*Credits: DeepWiki powered by Devin*
+## 🎯 Features
 
-![System Architecture](perplexity-ask/assets/system_architecture.png)
+This MCP server provides three powerful tools:
 
+- **`perplexity_ask`**: Real-time web search using Sonar Pro for quick, accurate answers
+- **`perplexity_research`**: Deep research capabilities for comprehensive analysis
+- **`perplexity_reason`**: Advanced reasoning with Perplexity's Sonar Reasoning Pro (powered by DeepSeek R1)
 
+## 📦 Quick Start
 
+### For Claude Code
 
-
-![Demo](perplexity-ask/assets/demo_screenshot.png)
-
-
-## Tools
-
-- **perplexity_ask**
-  - Engage in a conversation with the Sonar API for live web searches.
-  - **Inputs:**
-    - `messages` (array): An array of conversation messages.
-      - Each message must include:
-        - `role` (string): The role of the message (e.g., `system`, `user`, `assistant`).
-        - `content` (string): The content of the message.
-
-## Configuration
-
-### Step 1: 
-
-Clone this repository:
-
+1. **Clone and build the project:**
 ```bash
-git clone git@github.com:ppl-ai/modelcontextprotocol.git
+git clone https://github.com/yourusername/perplexity-mcp-openrouter.git
+cd perplexity-mcp-openrouter/perplexity-ask
+npm install && npm run build
 ```
 
-Navigate to the `perplexity-ask` directory and install the necessary dependencies:
+2. **Get your OpenRouter API key:**
+   - Sign up at [OpenRouter](https://openrouter.ai/)
+   - Generate an API key from your [dashboard](https://openrouter.ai/keys)
 
+3. **Install in Claude Code:**
 ```bash
-cd modelcontextprotocol/perplexity-ask && npm install
+# From the perplexity-ask directory
+claude mcp add openrouter-perplexity -s user -- env OPENROUTER_API_KEY=YOUR_API_KEY_HERE node "$(pwd)/dist/index.js"
 ```
 
-### Step 2: Get a Sonar API Key
+That's it! Look for the hammer icon in Claude Code to access your new tools.
 
-1. Sign up for a [Sonar API account](https://docs.perplexity.ai/guides/getting-started).
-2. Follow the account setup instructions and generate your API key from the developer dashboard.
-3. Set the API key in your environment as `PERPLEXITY_API_KEY`.
+### For Cursor
 
-### Step 3: Configure Claude Desktop
-
-1. Download Claude desktop [here](https://claude.ai/download). 
-
-2. Add this to your `claude_desktop_config.json`:
+1. Open Cursor Settings (`Cmd/Ctrl + ,`)
+2. Navigate to **Models** → **Model Context Protocol**
+3. Click **"Add new MCP server"**
+4. Add this configuration:
 
 ```json
 {
-  "mcpServers": {
-    "perplexity-ask": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "PERPLEXITY_API_KEY",
-        "mcp/perplexity-ask"
-      ],
-      "env": {
-        "PERPLEXITY_API_KEY": "YOUR_API_KEY_HERE"
-      }
+  "openrouter-perplexity": {
+    "command": "node",
+    "args": ["/path/to/perplexity-mcp-openrouter/perplexity-ask/dist/index.js"],
+    "env": {
+      "OPENROUTER_API_KEY": "YOUR_API_KEY_HERE"
     }
   }
 }
 ```
 
-### NPX
+5. Restart Cursor to activate the tools
 
-```json
-{
-  "mcpServers": {
-    "perplexity-ask": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "server-perplexity-ask"
-      ],
-      "env": {
-        "PERPLEXITY_API_KEY": "YOUR_API_KEY_HERE"
-      }
-    }
-  }
-}
-```
+## 🛠️ Available Tools
 
-You can access the file using:
+### perplexity_ask
+Engage in conversations with real-time web search capabilities. Perfect for:
+- Getting current information
+- Fact-checking
+- Quick research queries
+
+### perplexity_research  
+Perform deep, multi-step research with comprehensive citations. Ideal for:
+- In-depth technical research
+- Comparative analysis
+- Literature reviews
+
+### perplexity_reason
+Advanced reasoning and problem-solving using Sonar Reasoning Pro. Best for:
+- Complex problem decomposition
+- Step-by-step analysis
+- Mathematical and logical reasoning
+
+## 💡 Usage Examples
+
+Once installed, you can use these tools naturally in your conversations:
+
+- "Use perplexity_ask to find the latest React 19 features"
+- "Research the performance differences between Bun and Node.js"
+- "Help me reason through this algorithm's time complexity"
+
+## 🐳 Docker Support
+
+For containerized deployments:
 
 ```bash
-vim ~/Library/Application\ Support/Claude/claude_desktop_config.json
+# Build the image
+docker build -t mcp/openrouter-perplexity -f perplexity-ask/Dockerfile .
+
+# Run the container
+docker run -i --rm -e OPENROUTER_API_KEY=YOUR_API_KEY_HERE mcp/openrouter-perplexity
 ```
 
-### Step 4: Build the Docker Image
+## 🔧 Configuration
 
-Docker build:
+### Environment Variables
+- `OPENROUTER_API_KEY`: Your OpenRouter API key (required)
 
-```bash
-docker build -t mcp/perplexity-ask:latest -f Dockerfile .
-```
+### Advanced Options
+Modify request parameters in `perplexity-ask/index.ts`:
+- Temperature, max_tokens, and other OpenAI-compatible parameters
+- See [OpenRouter docs](https://openrouter.ai/docs) for full options
 
-### Step 5: Testing
+## 📊 Monitoring Usage
 
-Let's make sure Claude for Desktop is picking up the two tools we've exposed in our `perplexity-ask` server. You can do this by looking for the hammer icon:
+Track your usage and costs in the [OpenRouter dashboard](https://openrouter.ai/activity):
+- Real-time usage statistics
+- Cost breakdown by model
+- Request logs and debugging
 
-![Claude Visual Tools](perplexity-ask/assets/visual-indicator-mcp-tools.png)
+## 🐛 Troubleshooting
 
-After clicking on the hammer icon, you should see the tools that come with the Filesystem MCP Server:
+### MCP Server shows "failed" status
+1. Verify you're in the `perplexity-ask` directory when running the install command
+2. Check your API key is valid at [OpenRouter dashboard](https://openrouter.ai/keys)
+3. Try removing and re-adding:
+   ```bash
+   claude mcp remove openrouter-perplexity
+   # Then run the install command again
+   ```
 
-![Available Integration](perplexity-ask/assets/available_tools.png)
+### "Connection closed" errors
+- Ensure `dist/index.js` exists (run `npm run build`)
+- Check file permissions: `chmod +x dist/index.js`
 
-If you see both of these this means that the integration is active. Congratulations! This means Claude can now ask Perplexity. You can then simply use it as you would use the Perplexity web app.  
+### Tools not appearing
+- Restart Claude Code or Cursor after installation
+- Check for the hammer icon (Claude) or tool menu (Cursor)
 
-### Step 6: Advanced parameters
+## 🤝 Contributing
 
-Currently, the search parameters used are the default ones. You can modify any search parameter in the API call directly in the `index.ts` script. For this, please refer to the official [API documentation](https://docs.perplexity.ai/api-reference/chat-completions).
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Troubleshooting 
+## 📄 License
 
-The Claude documentation provides an excellent [troubleshooting guide](https://modelcontextprotocol.io/docs/tools/debugging) you can refer to. However, you can still reach out to us at api@perplexity.ai for any additional support or [file a bug](https://github.com/ppl-ai/api-discussion/issues). 
+This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 🔗 Resources
 
-# Cursor integration
+- [OpenRouter Documentation](https://openrouter.ai/docs)
+- [MCP Specification](https://modelcontextprotocol.io)
+- [Perplexity API Reference](https://docs.perplexity.ai/api-reference)
 
-You can also use our MCP with Cursor (or any other app that supports this). To use Sonar with Cursor, you can follow the following steps. 
+---
 
-### Step 1: Navigate to your Cursor settings:
-
-![Cursor Settings](perplexity-ask/assets/cursor-settings.png)
-
-### Step 2: Navigate to the MCP directory
-
-And click on `Add new global MCP server`
-
-![Add Server](perplexity-ask/assets/cursor-mcp-directory.png)
-
-
-### Step 3: Insert the MCP Server Configuration from above 
-
-This is the same configuration you would use for any other application that supports MCP. 
-
-You should then see the application being part of your available tools like this:
-
-![Cursor MCP](perplexity-ask/assets/perplexity-ask-mcp-cursor.png)
-
-
-## License
-
-This MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.
-
+Built with ❤️ to make AI-powered research accessible in your favorite coding tools.

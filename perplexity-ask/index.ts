@@ -11,12 +11,12 @@ import {
 /**
  * Definition of the Perplexity Ask Tool.
  * This tool accepts an array of messages and returns a chat completion response
- * from the Perplexity API, with citations appended to the message if provided.
+ * from the OpenRouter API using Perplexity models, with citations appended to the message if provided.
  */
 const PERPLEXITY_ASK_TOOL: Tool = {
   name: "perplexity_ask",
   description:
-    "Engages in a conversation using the Sonar API. " +
+    "Engages in a conversation using the Sonar API via OpenRouter. " +
     "Accepts an array of messages (each with a role and content) " +
     "and returns a ask completion response from the Perplexity model.",
   inputSchema: {
@@ -47,12 +47,12 @@ const PERPLEXITY_ASK_TOOL: Tool = {
 
 /**
  * Definition of the Perplexity Research Tool.
- * This tool performs deep research queries using the Perplexity API.
+ * This tool performs deep research queries using the OpenRouter API with Perplexity models.
  */
 const PERPLEXITY_RESEARCH_TOOL: Tool = {
   name: "perplexity_research",
   description:
-    "Performs deep research using the Perplexity API. " +
+    "Performs deep research using the Perplexity models via OpenRouter. " +
     "Accepts an array of messages (each with a role and content) " +
     "and returns a comprehensive research response with citations.",
   inputSchema: {
@@ -83,12 +83,12 @@ const PERPLEXITY_RESEARCH_TOOL: Tool = {
 
 /**
  * Definition of the Perplexity Reason Tool.
- * This tool performs reasoning queries using the Perplexity API.
+ * This tool performs reasoning queries using the OpenRouter API with Perplexity models.
  */
 const PERPLEXITY_REASON_TOOL: Tool = {
   name: "perplexity_reason",
   description:
-    "Performs reasoning tasks using the Perplexity API. " +
+    "Performs reasoning tasks using the Perplexity models via OpenRouter. " +
     "Accepts an array of messages (each with a role and content) " +
     "and returns a well-reasoned response using the sonar-reasoning-pro model.",
   inputSchema: {
@@ -117,15 +117,15 @@ const PERPLEXITY_REASON_TOOL: Tool = {
   },
 };
 
-// Retrieve the Perplexity API key from environment variables
-const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
-if (!PERPLEXITY_API_KEY) {
-  console.error("Error: PERPLEXITY_API_KEY environment variable is required");
+// Retrieve the OpenRouter API key from environment variables
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+if (!OPENROUTER_API_KEY) {
+  console.error("Error: OPENROUTER_API_KEY environment variable is required");
   process.exit(1);
 }
 
 /**
- * Performs a chat completion by sending a request to the Perplexity API.
+ * Performs a chat completion by sending a request to the OpenRouter API.
  * Appends citations to the returned message content if they exist.
  *
  * @param {Array<{ role: string; content: string }>} messages - An array of message objects.
@@ -135,16 +135,16 @@ if (!PERPLEXITY_API_KEY) {
  */
 async function performChatCompletion(
   messages: Array<{ role: string; content: string }>,
-  model: string = "sonar-pro"
+  model: string = "perplexity/sonar-pro"
 ): Promise<string> {
   // Construct the API endpoint URL and request body
-  const url = new URL("https://api.perplexity.ai/chat/completions");
+  const url = new URL("https://openrouter.ai/api/v1/chat/completions");
   const body = {
     model: model, // Model identifier passed as parameter
     messages: messages,
     // Additional parameters can be added here if required (e.g., max_tokens, temperature, etc.)
-    // See the Sonar API documentation for more details: 
-    // https://docs.perplexity.ai/api-reference/chat-completions
+    // See the OpenRouter API documentation for more details: 
+    // https://openrouter.ai/docs
   };
 
   let response;
@@ -153,12 +153,14 @@ async function performChatCompletion(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${PERPLEXITY_API_KEY}`,
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://github.com/ppl-ai/modelcontextprotocol",
+        "X-Title": "OpenRouter MCP Server",
       },
       body: JSON.stringify(body),
     });
   } catch (error) {
-    throw new Error(`Network error while calling Perplexity API: ${error}`);
+    throw new Error(`Network error while calling OpenRouter API: ${error}`);
   }
 
   // Check for non-successful HTTP status
@@ -170,7 +172,7 @@ async function performChatCompletion(
       errorText = "Unable to parse error response";
     }
     throw new Error(
-      `Perplexity API error: ${response.status} ${response.statusText}\n${errorText}`
+      `OpenRouter API error: ${response.status} ${response.statusText}\n${errorText}`
     );
   }
 
@@ -179,7 +181,7 @@ async function performChatCompletion(
   try {
     data = await response.json();
   } catch (jsonError) {
-    throw new Error(`Failed to parse JSON response from Perplexity API: ${jsonError}`);
+    throw new Error(`Failed to parse JSON response from OpenRouter API: ${jsonError}`);
   }
 
   // Directly retrieve the main message content from the response 
@@ -199,7 +201,7 @@ async function performChatCompletion(
 // Initialize the server with tool metadata and capabilities
 const server = new Server(
   {
-    name: "example-servers/perplexity-ask",
+    name: "openrouter-perplexity",
     version: "0.1.0",
   },
   {
@@ -237,7 +239,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         // Invoke the chat completion function with the provided messages
         const messages = args.messages;
-        const result = await performChatCompletion(messages, "sonar-pro");
+        const result = await performChatCompletion(messages, "perplexity/sonar-pro");
         return {
           content: [{ type: "text", text: result }],
           isError: false,
@@ -249,7 +251,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         // Invoke the chat completion function with the provided messages using the deep research model
         const messages = args.messages;
-        const result = await performChatCompletion(messages, "sonar-deep-research");
+        const result = await performChatCompletion(messages, "perplexity/sonar-deep-research");
         return {
           content: [{ type: "text", text: result }],
           isError: false,
@@ -261,7 +263,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         // Invoke the chat completion function with the provided messages using the reasoning model
         const messages = args.messages;
-        const result = await performChatCompletion(messages, "sonar-reasoning-pro");
+        const result = await performChatCompletion(messages, "perplexity/sonar-reasoning-pro");
         return {
           content: [{ type: "text", text: result }],
           isError: false,
@@ -296,7 +298,7 @@ async function runServer() {
   try {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("Perplexity MCP Server running on stdio with Ask, Research, and Reason tools");
+    console.error("OpenRouter MCP Server running on stdio with Perplexity Ask, Research, and Reason tools");
   } catch (error) {
     console.error("Fatal error running server:", error);
     process.exit(1);
